@@ -48,6 +48,7 @@ const {
   WaterfallChart,
   BasicRichText,
   PivotSheetChart,
+  BasicTreemapChart,
 } = WidgetPlugins;
 
 class ChartManager {
@@ -126,6 +127,7 @@ class ChartManager {
       new ScatterOutlineMapChart(),
       new BasicGaugeChart(),
       new BasicRichText(),
+      new BasicTreemapChart(),
     ];
   }
 }

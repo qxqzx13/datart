@@ -28,6 +28,7 @@ import BasicPieChart from './BasicPieChart';
 import BasicRichText from './BasicRichText';
 import BasicScatterChart from './BasicScatterChart';
 import BasicTableChart from './BasicTableChart';
+import BasicTreemapChart from './BasicTreemapChart';
 import ClusterBarChart from './ClusterBarChart';
 import ClusterColumnChart from './ClusterColumnChart';
 import DoughnutChart from './DoughnutChart';
@@ -80,5 +81,6 @@ const WidgetPlugins = {
   BasicGaugeChart,
   BasicRichText,
   PivotSheetChart,
+  BasicTreemapChart,
 };
 export default WidgetPlugins;
