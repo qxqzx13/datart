@@ -119,7 +119,9 @@ class BasicTreemapChart extends Chart {
   getTooltip(infoConfigs, aggregateConfigs) {
     return {
       formatter: function (data) {
-        console.log(data);
+        if (!data?.data?.path) {
+          return '';
+        }
         const infoList = infoConfigs.map((item, index) => {
           return valueFormatter(item, data.data.value[index + 1]);
         });
@@ -139,7 +141,7 @@ class BasicTreemapChart extends Chart {
     const breadcrumb = this.getBreadcrumbConfig(styles);
     const upperLabel = this.getUpperLabelConfig(styles);
     const treemap = this.getTreemapConfig(styles, upperLabel);
-    const levels = this.getLevelsConfig();
+    const levels = this.getLevelsConfig(group);
     return [
       {
         ...treemap,
@@ -156,40 +158,29 @@ class BasicTreemapChart extends Chart {
     ];
   }
 
-  getLevelsConfig() {
-    return [
-      // 如何处理
-      {
-        // 第一级 title级 没有名称
+  getLevelsConfig(group) {
+    const levels: any[] = [];
+    if (!(group && group.length)) {
+      return null;
+    }
+    for (let i = group.length; i > 0; i--) {
+      levels.unshift({
         itemStyle: {
           borderWidth: 5,
           gapWidth: 5,
+          borderColorSaturation: 0.6,
         },
-        upperLabel: {
-          show: false,
-        },
+      });
+    }
+    levels[0] = Object.assign(levels[0], {
+      upperLabel: {
+        show: false,
       },
-      {
-        // 数据一级
-        itemStyle: {
-          borderWidth: 3,
-          gapWidth: 3,
-          borderColor: 'skyblue',
-          color: 'skyblue',
-        },
-      },
-      {
-        // 数据二级
-        // colorSaturation: [0.35, 0.5],
-        itemStyle: {
-          borderWidth: 3,
-          gapWidth: 3,
-          borderColor: 'skyblue',
-          color: 'skyblue',
-          // borderColorSaturation: 0.6,
-        },
-      },
-    ];
+    });
+    levels[group.length - 1] = Object.assign(levels[group.length - 1], {
+      colorSaturation: [0.35, 0.5],
+    });
+    return levels;
   }
 
   getUpperLabelConfig(styles) {
@@ -296,7 +287,6 @@ class BasicTreemapChart extends Chart {
         const name = dc[getValueByColumnKey(gc)];
         path.push(name);
         const infoList = infoConfigs.map(info => dc[getValueByColumnKey(info)]);
-        console.log(infoList);
         const value =
           groupConfigs.length - 1 > index
             ? [0]
@@ -311,7 +301,6 @@ class BasicTreemapChart extends Chart {
       });
       this.getChildren(list, data, 0);
     });
-    console.log(data);
     return data;
   }
 
