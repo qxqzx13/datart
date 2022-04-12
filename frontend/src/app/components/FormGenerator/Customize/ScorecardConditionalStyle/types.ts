@@ -16,7 +16,28 @@
  * limitations under the License.
  */
 
+import { G70 } from 'styles/StyleConstants';
 import { OperatorTypes } from '../ConditionalStyle/types';
+
+export const ScorecardConstantConfig = {
+  METRICS: 'metrics',
+  BETWEEN: 'between',
+  TEXT_COLOR: G70,
+  BACKGROUND: 'transparent',
+  ICON_NAME: 'fsux_tubiao_shuangzhoutu',
+};
+
+export const REDUCED_VALUE_LIST = [
+  {
+    label: 'conditionalStyleTable.header.reducedType.constant',
+    value: 'constant',
+  },
+  {
+    label: 'conditionalStyleTable.header.reducedType.metrics',
+    value: 'metrics',
+  },
+];
+
 export interface ScorecardConditionalStyleFormValues {
   uid: string;
   target: { name?: string; type?: any };
@@ -24,5 +45,6 @@ export interface ScorecardConditionalStyleFormValues {
   operator: OperatorTypes;
   value: string;
   useMetricsValue?: boolean;
-  color: { background: string; textColor: string };
+  reducedValue?: string;
+  color: { background: string; textColor: string; iconName?: string };
 }

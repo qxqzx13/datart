@@ -34,6 +34,17 @@ const config: ChartConfig = {
       limit: 1,
     },
     {
+      label: 'metrics',
+      key: 'secondaryMetrics',
+      required: true,
+      type: 'aggregate',
+      actions: {
+        NUMERIC: ['aggregate', 'alias', 'format', 'sortable'],
+        STRING: ['aggregateLimit', 'alias', 'format', 'sortable'],
+      },
+      limit: [0, 1],
+    },
+    {
       label: 'filter',
       key: 'filter',
       type: 'filter',
@@ -59,7 +70,9 @@ const config: ChartConfig = {
               options: {
                 getItems: cols => {
                   const columns = (cols || [])
-                    .filter(col => ['metrics'].includes(col.key))
+                    .filter(col =>
+                      ['metrics', 'secondaryMetrics'].includes(col.key),
+                    )
                     .reduce((acc, cur) => acc.concat(cur.rows || []), [])
                     .map(c => ({
                       key: c.uid,
@@ -70,6 +83,38 @@ const config: ChartConfig = {
                   return columns;
                 },
               },
+              default: [
+                {
+                  uid: '',
+                  metricKey: 'secondaryMetrics',
+                  operator: '=',
+                  reducedValue: 'metrics',
+                  color: {
+                    textColor: '#424242',
+                    iconName: 'fsux_tubiao_shuangzhoutu',
+                  },
+                  target: {},
+                },
+                {
+                  uid: '',
+                  metricKey: 'secondaryMetrics',
+                  operator: '>',
+                  color: { textColor: '#388E3C', iconName: 'chart' },
+                  reducedValue: 'metrics',
+                  target: {},
+                },
+                {
+                  uid: '',
+                  metricKey: 'secondaryMetrics',
+                  operator: '<',
+                  color: {
+                    textColor: '#D32F2F',
+                    iconName: 'fsux_tubiao_loudoutu',
+                  },
+                  reducedValue: 'metrics',
+                  target: {},
+                },
+              ],
             },
           ],
         },
@@ -264,6 +309,99 @@ const config: ChartConfig = {
       ],
     },
     {
+      label: 'secondaryMetrics.title',
+      key: 'secondaryMetrics',
+      comType: 'group',
+      rows: [
+        {
+          label: 'common.autoFontSize',
+          key: 'autoFontSize',
+          default: true,
+          comType: 'checkbox',
+        },
+        {
+          label: 'common.scale',
+          key: 'scale',
+          default: 20,
+          comType: 'slider',
+          options: {
+            min: 2,
+            max: 20,
+            dots: false,
+          },
+          watcher: {
+            deps: ['autoFontSize'],
+            action: props => {
+              return {
+                disabled: !props.autoFontSize,
+              };
+            },
+          },
+        },
+        {
+          label: 'common.fixedFontSize',
+          key: 'fixedFontSize',
+          default: 12,
+          comType: 'inputNumber',
+          options: {
+            min: 12,
+            step: 1,
+          },
+          watcher: {
+            deps: ['autoFontSize'],
+            action: props => {
+              return {
+                disabled: props.autoFontSize,
+              };
+            },
+          },
+        },
+        {
+          label: 'viz.palette.style.font',
+          key: 'font',
+          comType: 'font',
+          default: {
+            fontFamily: FONT_FAMILY,
+            fontWeight: 'normal',
+            fontStyle: 'normal',
+            lineHeight: 1,
+            color: '#495057',
+          },
+          options: {
+            showLineHeight: true,
+            showFontSize: false,
+          },
+        },
+        {
+          label: 'common.position',
+          key: 'position',
+          comType: 'select',
+          default: 'column,end',
+          options: {
+            translateItemLabel: true,
+            items: [
+              {
+                label: 'common.positionType.top',
+                value: 'column,start',
+              },
+              {
+                label: 'common.positionType.bottom',
+                value: 'column,end',
+              },
+              {
+                label: 'common.positionType.left',
+                value: 'row,start',
+              },
+              {
+                label: 'common.positionType.right',
+                value: 'row,end',
+              },
+            ],
+          },
+        },
+      ],
+    },
+    {
       label: 'viz.palette.style.margin.title',
       key: 'margin',
       comType: 'group',
@@ -339,6 +477,9 @@ const config: ChartConfig = {
         data: {
           title: '数据',
         },
+        secondaryMetrics: {
+          title: '次要指标',
+        },
         conditionalStyle: {
           open: '打开样式设置',
         },
@@ -366,6 +507,9 @@ const config: ChartConfig = {
         },
         data: {
           title: 'Data',
+        },
+        secondaryMetrics: {
+          title: 'Secondary Metrics',
         },
         conditionalStyle: {
           open: 'Open Style Setting',

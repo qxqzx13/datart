@@ -18,15 +18,50 @@
 
 import { FC, memo } from 'react';
 import styled from 'styled-components/macro';
+import IconBox from '../../IconPicker/IconBox';
 import { AggregateBoxProp, ScorecardBoxProp, ScorecardConfig } from './types';
 
 const ScorecardAdapter: FC<ScorecardConfig> = memo(
-  ({ dataConfig, labelConfig, padding, data, background }) => {
+  ({ dataConfig, labelConfig, padding, data, background, secondaryConfig }) => {
     const ssp = e => {
       e.stopPropagation();
     };
+    const getSecondaryBox = (positionType: string) => {
+      return (
+        <SecondaryMetrics
+          style={{
+            visibility:
+              positionType === secondaryConfig?.position?.[1] &&
+              data?.length > 1
+                ? undefined
+                : 'hidden',
+            ...dataConfig?.[1].font,
+          }}
+        >
+          {secondaryConfig?.position?.[0] !== 'row' && (
+            <LabelBox>{data?.[1]?.label}</LabelBox>
+          )}
+          <ValueBox>
+            {dataConfig?.[1]?.iconName && (
+              <IconBox
+                iconName={dataConfig?.[1]?.iconName}
+                size={dataConfig?.[1].font.fontSize}
+              />
+            )}
+            {data?.[1]?.value}
+          </ValueBox>
+        </SecondaryMetrics>
+      );
+    };
+
     return (
-      <ScorecardBox padding={padding} onClick={ssp} style={{ background }}>
+      <ScorecardBox
+        secondaryPosition={secondaryConfig?.position?.[0] || 'column'}
+        padding={padding}
+        onClick={ssp}
+        style={{ background }}
+      >
+        {getSecondaryBox('start')}
         <AggregateBox
           alignment={labelConfig?.alignment || 'center'}
           position={labelConfig?.position || 'column'}
@@ -36,17 +71,30 @@ const ScorecardAdapter: FC<ScorecardConfig> = memo(
             <LabelBox style={labelConfig?.font}>{data?.[0]?.label}</LabelBox>
           )}
         </AggregateBox>
+        {getSecondaryBox('end')}
       </ScorecardBox>
     );
   },
 );
 export default ScorecardAdapter;
 
-const ScorecardBox = styled.div<ScorecardBoxProp>`
+const SecondaryMetrics = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 0;
+  max-height: 100%;
+`;
+
+const ScorecardBox = styled.div<ScorecardBoxProp>`
+  display: flex;
+  flex-direction: ${p => p.secondaryPosition};
+  align-items: center;
+  justify-content: ${p =>
+    p.secondaryPosition === 'row' ? 'center' : 'space-between'};
   width: 100%;
   min-width: 0;
   height: 100%;

@@ -26,10 +26,14 @@ import { FC, memo, useState } from 'react';
 import styled from 'styled-components/macro';
 import { AssignDeep, CloneValueDeep } from 'utils/object';
 import { uuidv4 } from 'utils/utils';
+import IconBox from '../../../IconPicker/IconBox';
 import { ItemLayoutProps } from '../../types';
 import { itemLayoutComparer } from '../../utils';
 import AddModal from './add';
-import { ScorecardConditionalStyleFormValues } from './types';
+import {
+  ScorecardConditionalStyleFormValues,
+  ScorecardConstantConfig,
+} from './types';
 
 const ScorecardConditionalStyle: FC<ItemLayoutProps<ChartStyleConfig>> = memo(
   ({
@@ -61,10 +65,28 @@ const ScorecardConditionalStyle: FC<ItemLayoutProps<ChartStyleConfig>> = memo(
     const [dataSource, setDataSource] = useState<
       ScorecardConditionalStyleFormValues[]
     >(
-      myData?.value?.filter(item =>
-        allItems.find(ac => ac.key === item.metricKey),
-      ) || [],
+      // todo 没有添加默认值 暂时不对
+      myData?.value
+        ?.filter(
+          item =>
+            (item.metricKey === 'metrics' && allItems?.[0]?.key) ||
+            (item.metricKey === 'secondaryMetrics' && allItems?.[1]?.key) ||
+            allItems.find(ac => ac.key === item.metricKey),
+        )
+        .map(data => {
+          if (data.metricKey === 'metrics') {
+            data.metricKey = allItems?.[0]?.key;
+            !data.uid && (data.uid = uuidv4());
+          } else if (data.metricKey === 'secondaryMetrics') {
+            data.metricKey = allItems?.[1]?.key;
+            !data.uid && (data.uid = uuidv4());
+          }
+          return data;
+        }) || [],
     );
+
+    // todo 没有添加默认值 暂时不对
+    // console.log(dataSource);
 
     const [currentItem, setCurrentItem] =
       useState<ScorecardConditionalStyleFormValues>(
@@ -102,7 +124,12 @@ const ScorecardConditionalStyle: FC<ItemLayoutProps<ChartStyleConfig>> = memo(
         {
           title: t('conditionalStyleTable.header.value'),
           dataIndex: 'value',
-          render: (_, { value }) => <>{JSON.stringify(value)}</>,
+          render: (_, { value, reducedValue }) => {
+            if (reducedValue === ScorecardConstantConfig.METRICS) {
+              return allItems?.[0].label;
+            }
+            return <>{JSON.stringify(value)}</>;
+          },
         },
         {
           title: t('conditionalStyleTable.header.color.title'),
@@ -112,9 +139,19 @@ const ScorecardConditionalStyle: FC<ItemLayoutProps<ChartStyleConfig>> = memo(
               <Tag color={color.textColor}>
                 {t('conditionalStyleTable.header.color.text')}
               </Tag>
-              <Tag color={color.background}>
-                {t('conditionalStyleTable.header.color.background')}
-              </Tag>
+              {color.background && (
+                <Tag color={color.background}>
+                  {t('conditionalStyleTable.header.color.background')}
+                </Tag>
+              )}
+              {color.iconName && (
+                <Tag>
+                  <IconBox
+                    iconName={color.iconName}
+                    style={{ lineHeight: '22px' }}
+                  />
+                </Tag>
+              )}
             </>
           ),
         },

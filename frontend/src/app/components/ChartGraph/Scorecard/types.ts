@@ -8,8 +8,10 @@ interface FontConfig {
   fontWeight: string;
   lineHeight: number;
 }
-
 export interface ScorecardConfig {
+  secondaryConfig: {
+    position: string[];
+  };
   dataConfig: FontConfig;
   labelConfig: {
     show: boolean;
@@ -23,14 +25,15 @@ export interface ScorecardConfig {
     height: number;
   };
   width: number;
-  data: {
+  data: Array<{
     label: string;
     value: number | string;
-  };
+  }>;
   background: string;
 }
 
 export interface ScorecardBoxProp {
+  secondaryPosition: string;
   padding: string | number;
 }
 

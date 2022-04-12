@@ -17,8 +17,10 @@
  */
 
 import { OperatorTypes } from 'app/components/FormGenerator/Customize/ConditionalStyle/types';
-import { ScorecardConditionalStyleFormValues } from 'app/components/FormGenerator/Customize/ScorecardConditionalStyle/types';
-import { CSSProperties } from 'react';
+import {
+  ScorecardConditionalStyleFormValues,
+  ScorecardConstantConfig,
+} from 'app/components/FormGenerator/Customize/ScorecardConditionalStyle/types';
 
 const isMatchedTheCondition = (
   value: string | number,
@@ -96,26 +98,44 @@ const deleteUndefinedProps = props => {
   }, {});
 };
 
-const getTheSameRange = (list, key) =>
-  list?.filter(item => item?.metricKey === key);
+const getTheSameRange = (list, key, metricsValue) =>
+  list
+    ?.filter(item => item?.metricKey === key)
+    .map(v => {
+      if (v.reducedValue === ScorecardConstantConfig.METRICS) {
+        return {
+          ...v,
+          value: metricsValue,
+        };
+      }
+      return v;
+    });
 
 export const getConditionalStyle = (
   cellValue: any,
   conditionalStyle: ScorecardConditionalStyleFormValues[],
   metricKey: string,
-): CSSProperties => {
-  const currentConfigs = getTheSameRange(conditionalStyle, metricKey);
+  metricsValue?: string,
+): { background?: string; color?: string; iconName?: string } => {
+  const currentConfigs = getTheSameRange(
+    conditionalStyle,
+    metricKey,
+    metricsValue,
+  );
   if (!currentConfigs?.length) {
     return {};
   }
   const text = cellValue;
-  let cellStyle: CSSProperties = {};
-
+  let cellStyle: any = {};
   try {
     currentConfigs?.forEach(
-      ({ operator, value, color: { background, textColor: color } }) => {
+      ({
+        operator,
+        value,
+        color: { background, textColor: color, iconName },
+      }) => {
         cellStyle = isMatchedTheCondition(text, operator, value)
-          ? { backgroundColor: background, color }
+          ? { backgroundColor: background, color, iconName }
           : cellStyle;
       },
     );

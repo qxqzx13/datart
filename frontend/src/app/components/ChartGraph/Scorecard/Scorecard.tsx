@@ -110,6 +110,7 @@ class Scorecard extends ReactChart {
       aggregateConfigs,
       chartDataSet,
     );
+    const secondaryConfig = this.getSecondaryConfig(styleConfigs);
     const labelConfig = this.getLabelConfig(
       aggColorConfig,
       styleConfigs,
@@ -129,6 +130,15 @@ class Scorecard extends ReactChart {
         ),
       },
     ];
+    if (aggregateConfigs.length > 1) {
+      data.push({
+        label: getColumnRenderName(aggregateConfigs[1]),
+        value: toFormattedValue(
+          chartDataSet?.[0]?.getCell?.(aggregateConfigs[1]),
+          aggregateConfigs[1]?.format,
+        ),
+      });
+    }
     return {
       context: {
         width: context.width,
@@ -139,6 +149,14 @@ class Scorecard extends ReactChart {
       padding,
       data,
       background: aggColorConfig?.[0]?.backgroundColor || 'transparent',
+      secondaryConfig,
+    };
+  }
+
+  getSecondaryConfig(style) {
+    const [position] = getStyles(style, ['secondaryMetrics'], ['position']);
+    return {
+      position: position.split(','),
     };
   }
 
@@ -155,18 +173,41 @@ class Scorecard extends ReactChart {
     return aggConfig.map(ac =>
       getConditionalStyle(
         chartDataSet?.[0]?.getCell?.(ac),
-        conditionalStylePanel,
+        this.getConditionalStylePanel(conditionalStylePanel, aggConfig),
         ac.uid!,
+        chartDataSet?.[0]?.getCell?.(aggConfig[0]),
       ),
     );
   }
 
+  getConditionalStylePanel(list, aggConfig: ChartDataSectionField[]) {
+    return list.map(v => {
+      if (v.metricKey === 'metrics') {
+        return {
+          ...v,
+          metricKey: aggConfig?.[0]?.uid,
+        };
+      } else if (v.metricKey === 'secondaryMetrics') {
+        return {
+          ...v,
+          metricKey: aggConfig?.[1]?.uid,
+        };
+      }
+      return v;
+    });
+  }
+
   getDataConfig(
-    aggColorConfig: CSSProperties[],
+    aggColorConfig,
     style: ChartStyleConfig[],
     fontSizeFn: (path: string[]) => string,
-  ): { font: FontStyle }[] {
+  ): { font: FontStyle; iconName?: string }[] {
     const [font] = getStyles(style, ['data'], ['font']);
+    const [secondaryMetricsFont] = getStyles(
+      style,
+      ['secondaryMetrics'],
+      ['font'],
+    );
     return [
       {
         font: {
@@ -174,6 +215,14 @@ class Scorecard extends ReactChart {
           ...font,
           color: aggColorConfig?.[0]?.color || font.color,
         },
+      },
+      {
+        font: {
+          fontSize: fontSizeFn(['secondaryMetrics']),
+          ...secondaryMetricsFont,
+          color: aggColorConfig?.[1]?.color || secondaryMetricsFont.color,
+        },
+        iconName: aggColorConfig?.[1]?.iconName,
       },
     ];
   }

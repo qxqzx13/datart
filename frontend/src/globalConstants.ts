@@ -72,6 +72,13 @@ export const FONT_LINE_HEIGHT = [
   10,
 ];
 
+export const ICON_LIST = [
+  '',
+  'chart',
+  'fsux_tubiao_shuangzhoutu',
+  'fsux_tubiao_loudoutu',
+];
+
 export const FONT_FAMILIES = [
   { name: 'viz.palette.style.fontFamily.default', value: FONT_FAMILY },
   {

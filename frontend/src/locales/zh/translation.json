@@ -523,10 +523,16 @@
           "header": {
             "operator": "关系",
             "value": "值",
+            "reducedValue": "对比值",
+            "reducedType": {
+              "constant": "常量",
+              "metrics": "指标"
+            },
             "color": {
               "title": "颜色",
               "background": "背景",
-              "text": "文字"
+              "text": "文字",
+              "icon": "图标"
             },
             "range": {
               "title": "应用范围",

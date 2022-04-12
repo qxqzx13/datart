@@ -523,10 +523,16 @@
           "header": {
             "operator": "Operator",
             "value": "Value",
+            "reducedValue": "Reduced Value",
+            "reducedType": {
+              "constant": "Constant",
+              "metrics": "Metrics"
+            },
             "color": {
               "title": "Color",
               "background": "Background",
-              "text": "Text"
+              "text": "Text",
+              "icon": "Icon"
             },
             "range": {
               "title": "Applied range",

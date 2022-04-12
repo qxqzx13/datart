@@ -20,14 +20,19 @@ import { ColorPickerPopover } from 'app/components/ColorPicker';
 import { DataViewFieldType } from 'app/constants';
 import { memo, useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { G70 } from 'styles/StyleConstants';
 import { isEmpty } from 'utils/object';
+import IconPickerPopover from '../../../IconPicker';
+import IconBox from '../../../IconPicker/IconBox';
 import {
   ConditionalOperatorTypes,
   OperatorTypes,
   OperatorTypesLocale,
 } from '../ConditionalStyle/types';
-import { ScorecardConditionalStyleFormValues } from './types';
+import {
+  REDUCED_VALUE_LIST,
+  ScorecardConditionalStyleFormValues,
+  ScorecardConstantConfig,
+} from './types';
 
 interface AddProps {
   context?: any;
@@ -52,14 +57,20 @@ export default function Add({
     {
       name: 'textColor',
       label: t('conditionalStyleTable.header.color.text'),
-      value: G70,
+      value: ScorecardConstantConfig.TEXT_COLOR,
     },
     {
       name: 'background',
       label: t('conditionalStyleTable.header.color.background'),
-      value: 'transparent',
+      value: ScorecardConstantConfig.BACKGROUND,
     },
   ]);
+
+  const [colorIcon] = useState({
+    name: 'iconName',
+    label: t('conditionalStyleTable.header.color.icon'),
+    value: ScorecardConstantConfig.ICON_NAME,
+  });
   const [operatorSelect, setOperatorSelect] = useState<
     { label: string; value: string }[]
   >([]);
@@ -68,6 +79,10 @@ export default function Add({
   );
   const [form] = Form.useForm<ScorecardConditionalStyleFormValues>();
   const [type] = useState(DataViewFieldType.NUMERIC);
+  const [useSecondaryMetrics, setSecondaryMetrics] = useState<boolean>(false);
+  const [useReducedValue, setUseReducedValue] = useState<string>(
+    REDUCED_VALUE_LIST[0].value,
+  );
 
   useEffect(() => {
     if (type) {
@@ -85,15 +100,26 @@ export default function Add({
   useEffect(() => {
     // !重置form
     if (visible) {
+      if (values && Object.keys(values).length !== 0) {
+        setUseReducedValue(values.reducedValue || REDUCED_VALUE_LIST[0].value);
+        setSecondaryMetrics(
+          !!allItems?.findIndex(v => v.value === values.metricKey),
+        );
+      } else {
+        setUseReducedValue(REDUCED_VALUE_LIST[0].value);
+        setSecondaryMetrics(false);
+      }
       const result: Partial<ScorecardConditionalStyleFormValues> =
         Object.keys(values).length === 0
           ? {
               operator: OperatorTypes.Equal,
               color: {
-                background: 'transparent',
-                textColor: G70,
+                background: ScorecardConstantConfig.BACKGROUND,
+                textColor: ScorecardConstantConfig.TEXT_COLOR,
+                iconName: ScorecardConstantConfig.ICON_NAME,
               },
               metricKey: allItems?.[0]?.value,
+              reducedValue: REDUCED_VALUE_LIST[0].value,
             }
           : values;
       form.setFieldsValue(result);
@@ -113,7 +139,27 @@ export default function Add({
     });
   };
 
+  const metricChange = (value: string) => {
+    const status = !!allItems?.findIndex(v => v.value === value);
+    if (status) {
+      form.setFieldsValue({
+        reducedValue: REDUCED_VALUE_LIST[0].value,
+        color: { iconName: ScorecardConstantConfig.ICON_NAME },
+      });
+      setUseReducedValue(REDUCED_VALUE_LIST[0].value);
+    }
+    setSecondaryMetrics(status);
+  };
+
+  const reducedValueChange = (value: string) => {
+    setUseReducedValue(value);
+  };
+
   const operatorChange = (value: OperatorTypes) => {
+    if (value === ScorecardConstantConfig.BETWEEN) {
+      form.setFieldsValue({ reducedValue: REDUCED_VALUE_LIST[0].value });
+      setUseReducedValue(REDUCED_VALUE_LIST[0].value);
+    }
     setOperatorValue(value);
   };
 
@@ -121,7 +167,11 @@ export default function Add({
     let DefaultNode = <></>;
     switch (type) {
       case DataViewFieldType.NUMERIC:
-        DefaultNode = <InputNumber />;
+        DefaultNode = (
+          <InputNumber
+            disabled={useReducedValue === ScorecardConstantConfig.METRICS}
+          />
+        );
         break;
       default:
         DefaultNode = <Input />;
@@ -172,7 +222,7 @@ export default function Add({
           name="metricKey"
           rules={[{ required: true }]}
         >
-          <Select>
+          <Select onChange={metricChange}>
             {allItems?.map((o, index) => {
               const label = isEmpty(o['label']) ? o : o.label;
               const key = isEmpty(o['key']) ? index : o.key;
@@ -195,22 +245,59 @@ export default function Add({
         </Form.Item>
 
         {operatorValue !== OperatorTypes.IsNull ? (
-          <Form.Item
-            label={t('conditionalStyleTable.header.value')}
-            name="value"
-            rules={[{ required: true }]}
-          >
-            {renderValueNode()}
-          </Form.Item>
+          <>
+            {useSecondaryMetrics && (
+              <Form.Item
+                label={t('conditionalStyleTable.header.reducedValue')}
+                name="reducedValue"
+                rules={[{ required: true }]}
+              >
+                <Select
+                  onChange={reducedValueChange}
+                  disabled={operatorValue === ScorecardConstantConfig.BETWEEN}
+                >
+                  {REDUCED_VALUE_LIST?.map(o => {
+                    return (
+                      <Select.Option key={o.value} value={o.value}>
+                        {t(o.label)}
+                      </Select.Option>
+                    );
+                  })}
+                </Select>
+              </Form.Item>
+            )}
+            {(!useSecondaryMetrics ||
+              useReducedValue !== ScorecardConstantConfig.METRICS) && (
+              <Form.Item
+                label={t('conditionalStyleTable.header.value')}
+                name="value"
+                rules={[{ required: true }]}
+              >
+                {renderValueNode()}
+              </Form.Item>
+            )}
+          </>
         ) : null}
 
         <Form.Item label={t('conditionalStyleTable.header.color.title')}>
           <Row gutter={24} align="middle">
-            {colors.map(({ label, value, name }) => (
-              <Form.Item key={label} name={['color', name]} noStyle>
-                <ColorSelector label={label} value={value} />
+            {colors.map(
+              ({ label, value, name }) =>
+                (name !== 'background' || !useSecondaryMetrics) && (
+                  <Form.Item key={label} name={['color', name]} noStyle>
+                    <ColorSelector label={label} value={value} />
+                  </Form.Item>
+                ),
+            )}
+            {useSecondaryMetrics && (
+              <Form.Item
+                key={colorIcon.name}
+                name={['color', colorIcon.name]}
+                noStyle
+              >
+                <IconSelector label={colorIcon.label} value={colorIcon.value} />
               </Form.Item>
-            ))}
+            )}
           </Row>
         </Form.Item>
       </Form>
@@ -235,6 +322,31 @@ const ColorSelector = memo(
           <ColorPickerPopover defaultValue={value} onSubmit={onChange}>
             <StyledColor color={value} />
           </ColorPickerPopover>
+        </Col>
+      </>
+    );
+  },
+);
+
+const IconSelector = memo(
+  ({
+    label,
+    value,
+    onChange,
+  }: {
+    label: string;
+    value: string;
+    onChange?: (value: any) => void;
+  }) => {
+    return (
+      <>
+        <Col>{label}</Col>
+        <Col>
+          <IconPickerPopover defaultValue={value} onSubmit={onChange}>
+            <StyledColor>
+              <IconBox iconName={value} />
+            </StyledColor>
+          </IconPickerPopover>
         </Col>
       </>
     );
@@ -306,7 +418,9 @@ const StyledColor = styled.div`
   position: relative;
   width: 16px;
   height: 16px;
+  line-height: 1;
   cursor: pointer;
+
   background-color: ${props => props.color};
   ::after {
     position: absolute;
